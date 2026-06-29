@@ -1,0 +1,287 @@
+# config_paper.yaml — IC3INA 2026
+# Konfigurasi 8 skenario ablasi yang digunakan dalam paper.
+#
+# Sebelum dijalankan:
+#   1. Set token HuggingFace: ganti 'hf_YOUR_TOKEN_HERE' dengan token Anda,
+#      atau set environment variable: export HF_TOKEN=hf_...
+#   2. Sesuaikan path: ollama_bin, datapath, testfile dengan setup lokal.
+#   3. Taxonomy data tersedia di folder data/:
+#        data/taxonomy_concepts_v4.json
+#        data/synonym_index_v4.json
+#
+# Urutan skenario mengikuti ablasi di paper (Table I):
+#   BASE → CE → QEXP-CE → QRW-CE → QEXP-CE-T-O → QEXP-BMT → QEXP-BMT-O → QRW-BMT
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# 1. BASE — dense retrieval saja, tanpa reranking
+# ---------------------------------------------------------------------------
+- nama_model: 'D003D-bgem3-sahabatai-semantic-vsi'
+  embed_model: 'local|hf|local_bge_m3'
+  llm_model: 'ollama|csalab/sahabatai1:latest'
+  chunking: 'semantic'
+  domain: 'medical'
+  info_medis: True
+  datapath: 'data/data_RAG'
+  testfile: 'data/data_test/qa-dokter-eg.xlsx'
+  port: 5000
+  prefix: False
+  append_db: False
+  mode: 'query-eval'
+  ollama_bin: '/home/lyla001/ollama/.local/bin/ollama'
+  token_hf: 'hf_YOUR_TOKEN_HERE'
+  venv: 'newchatvenv'
+  partition: 'long'
+  node: 'a100'
+  top_k: 5
+  n_iterations: 10
+  use_rerank: false
+
+# ---------------------------------------------------------------------------
+# 2. CE — cross-encoder reranking, tanpa query processing khusus
+#    Bobot: w_v=0.80, w_ce=0.20, w_τ=0.00
+# ---------------------------------------------------------------------------
+- nama_model: 'D003D-CE-NOQEXP-bgem3-sahabatai-semantic'
+  embed_model: 'local|hf|local_bge_m3'
+  llm_model: 'ollama|csalab/sahabatai1:latest'
+  chunking: 'semantic'
+  domain: 'medical'
+  info_medis: True
+  datapath: 'data/data_RAG'
+  testfile: 'data/data_test/qa-dokter-eg.xlsx'
+  port: 5000
+  prefix: False
+  append_db: False
+  mode: 'query-eval'
+  ollama_bin: '/home/lyla001/ollama/.local/bin/ollama'
+  token_hf: 'hf_YOUR_TOKEN_HERE'
+  venv: 'newchatvenv'
+  partition: 'long'
+  node: 'a100'
+  taxonomy_concepts_path: 'data/taxonomy_concepts_v4.json'
+  synonym_index_path: 'data/synonym_index_v4.json'
+  top_k: 5
+  retrieval_candidates_k: 20
+  n_iterations: 10
+  use_rerank: true
+  use_query_expansion_for_retrieval: false
+  use_cross_encoder: true
+  cross_encoder_model: 'BAAI/bge-reranker-v2-m3'
+  w_vector: 0.80
+  w_cross: 0.20
+  w_taxonomy: 0.00
+  w_bm25: 0.00
+  chroma_model: 'D003D-bgem3-sahabatai-semantic-vsi'
+
+# ---------------------------------------------------------------------------
+# 3. QEXP-CE — taxonomy query expansion + CE reranking
+#    Bobot: w_v=0.80, w_ce=0.20, w_τ=0.00
+# ---------------------------------------------------------------------------
+- nama_model: 'D003D-QEXP-CE-CLEAN-V4-bgem3-sahabatai-semantic'
+  embed_model: 'local|hf|local_bge_m3'
+  llm_model: 'ollama|csalab/sahabatai1:latest'
+  chunking: 'semantic'
+  domain: 'medical'
+  info_medis: True
+  datapath: 'data/data_RAG'
+  testfile: 'data/data_test/qa-dokter-eg.xlsx'
+  port: 5000
+  prefix: False
+  append_db: False
+  mode: 'query-eval'
+  ollama_bin: '/home/lyla001/ollama/.local/bin/ollama'
+  token_hf: 'hf_YOUR_TOKEN_HERE'
+  venv: 'newchatvenv'
+  partition: 'long'
+  node: 'a100'
+  taxonomy_concepts_path: 'data/taxonomy_concepts_v4.json'
+  synonym_index_path: 'data/synonym_index_v4.json'
+  top_k: 5
+  retrieval_candidates_k: 20
+  n_iterations: 10
+  use_rerank: true
+  use_query_expansion_for_retrieval: true
+  use_query_rewriting: false
+  use_cross_encoder: true
+  cross_encoder_model: 'BAAI/bge-reranker-v2-m3'
+  w_vector: 0.80
+  w_cross: 0.20
+  w_taxonomy: 0.00
+  w_bm25: 0.00
+  chroma_model: 'D003D-TAX-QEXP-CLEAN-V4-bgem3-sahabatai-semantic'
+
+# ---------------------------------------------------------------------------
+# 4. QRW-CE — query rewriting + CE reranking (skenario terbaik)
+#    4 variasi query, hasil di-merge; bobot: w_v=0.80, w_ce=0.20, w_τ=0.00
+# ---------------------------------------------------------------------------
+- nama_model: 'D003D-QREWRITE-CE-CLEAN-V4-bgem3-sahabatai-semantic'
+  embed_model: 'local|hf|local_bge_m3'
+  llm_model: 'ollama|csalab/sahabatai1:latest'
+  chunking: 'semantic'
+  domain: 'medical'
+  info_medis: True
+  datapath: 'data/data_RAG'
+  testfile: 'data/data_test/qa-dokter-eg.xlsx'
+  port: 5000
+  prefix: False
+  append_db: False
+  mode: 'query-eval'
+  ollama_bin: '/home/lyla001/ollama/.local/bin/ollama'
+  token_hf: 'hf_YOUR_TOKEN_HERE'
+  venv: 'newchatvenv'
+  partition: 'long'
+  node: 'a100'
+  taxonomy_concepts_path: 'data/taxonomy_concepts_v4.json'
+  synonym_index_path: 'data/synonym_index_v4.json'
+  top_k: 5
+  retrieval_candidates_k: 20
+  n_iterations: 10
+  use_rerank: true
+  use_query_expansion_for_retrieval: false
+  use_query_rewriting: true
+  max_query_variants: 3
+  frequency_boost_factor: 0.1
+  use_cross_substitution: false
+  use_cross_encoder: true
+  cross_encoder_model: 'BAAI/bge-reranker-v2-m3'
+  w_vector: 0.80
+  w_cross: 0.20
+  w_taxonomy: 0.00
+  w_bm25: 0.00
+  chroma_model: 'D003D-TAX-QEXP-CLEAN-bgem3-sahabatai-semantic'
+
+# ---------------------------------------------------------------------------
+# 5. QEXP-CE-T-O — taxonomy expansion + CE + taxonomy score
+#    Bobot dioptimalkan via grid search: w_v=0.70, w_ce=0.20, w_τ=0.10
+# ---------------------------------------------------------------------------
+- nama_model: 'D003D-TAX-CE-CLEAN-V4-bgem3-sahabatai-semantic'
+  embed_model: 'local|hf|local_bge_m3'
+  llm_model: 'ollama|csalab/sahabatai1:latest'
+  chunking: 'semantic'
+  domain: 'medical'
+  info_medis: True
+  datapath: 'data/data_RAG'
+  testfile: 'data/data_test/qa-dokter-eg.xlsx'
+  port: 5000
+  prefix: False
+  append_db: False
+  mode: 'query-eval'
+  ollama_bin: '/home/lyla001/ollama/.local/bin/ollama'
+  token_hf: 'hf_YOUR_TOKEN_HERE'
+  venv: 'newchatvenv'
+  partition: 'long'
+  node: 'a100'
+  taxonomy_concepts_path: 'data/taxonomy_concepts_v4.json'
+  synonym_index_path: 'data/synonym_index_v4.json'
+  top_k: 5
+  retrieval_candidates_k: 20
+  n_iterations: 10
+  use_rerank: true
+  use_query_expansion_for_retrieval: true
+  use_query_rewriting: false
+  use_cross_encoder: true
+  cross_encoder_model: 'BAAI/bge-reranker-v2-m3'
+  w_vector: 0.70
+  w_cross: 0.20
+  w_taxonomy: 0.10
+  w_bm25: 0.00
+  chroma_model: 'D003D-TAX-QEXP-CLEAN-V4-bgem3-sahabatai-semantic'
+
+# ---------------------------------------------------------------------------
+# 6. QEXP-BMT — taxonomy expansion + BM25+Taxonomy reranking
+#    Bobot default: w_v=0.45, w_b=0.25, w_τ=0.30
+# ---------------------------------------------------------------------------
+- nama_model: 'D003D-TAX-QEXP-CLEAN-V4-bgem3-sahabatai-semantic'
+  embed_model: 'local|hf|local_bge_m3'
+  llm_model: 'ollama|csalab/sahabatai1:latest'
+  chunking: 'semantic'
+  domain: 'medical'
+  info_medis: True
+  datapath: 'data/data_RAG'
+  testfile: 'data/data_test/qa-dokter-eg.xlsx'
+  port: 5000
+  prefix: False
+  append_db: False
+  mode: 'createdb-query-eval'
+  ollama_bin: '/home/lyla001/ollama/.local/bin/ollama'
+  token_hf: 'hf_YOUR_TOKEN_HERE'
+  venv: 'newchatvenv'
+  partition: 'long'
+  node: 'a100'
+  taxonomy_concepts_path: 'data/taxonomy_concepts_v4.json'
+  synonym_index_path: 'data/synonym_index_v4.json'
+  top_k: 5
+  retrieval_candidates_k: 20
+  n_iterations: 10
+  use_rerank: true
+  use_query_expansion_for_retrieval: true
+  extra_excluded_embed_keys:
+    - taxonomy_tags
+    - taxonomy_concept_ids
+
+# ---------------------------------------------------------------------------
+# 7. QEXP-BMT-O — taxonomy expansion + BM25+Taxonomy, bobot grid-search optimal
+#    Bobot: w_v=0.50, w_b=0.40, w_τ=0.10
+# ---------------------------------------------------------------------------
+- nama_model: 'D003D-TAX-QEXP-OPT-CLEAN-bgem3-sahabatai-semantic'
+  embed_model: 'local|hf|local_bge_m3'
+  llm_model: 'ollama|csalab/sahabatai1:latest'
+  chunking: 'semantic'
+  domain: 'medical'
+  info_medis: True
+  datapath: 'data/data_RAG'
+  testfile: 'data/data_test/qa-dokter-eg.xlsx'
+  port: 5000
+  prefix: False
+  append_db: False
+  mode: 'query-eval'
+  ollama_bin: '/home/lyla001/ollama/.local/bin/ollama'
+  token_hf: 'hf_YOUR_TOKEN_HERE'
+  venv: 'newchatvenv'
+  partition: 'long'
+  node: 'a100'
+  taxonomy_concepts_path: 'data/taxonomy_concepts_v4.json'
+  synonym_index_path: 'data/synonym_index_v4.json'
+  top_k: 5
+  retrieval_candidates_k: 20
+  n_iterations: 10
+  use_rerank: true
+  use_query_expansion_for_retrieval: true
+  w_vector: 0.50
+  w_bm25: 0.40
+  w_taxonomy: 0.10
+  chroma_model: 'D003D-TAX-QEXP-CLEAN-V4-bgem3-sahabatai-semantic'
+
+# ---------------------------------------------------------------------------
+# 8. QRW-BMT — query rewriting + BM25+Taxonomy reranking
+#    Bobot default: w_v=0.45, w_b=0.25, w_τ=0.30
+# ---------------------------------------------------------------------------
+- nama_model: 'D003D-QREWRITE-TAX-CLEAN-V4-bgem3-sahabatai-semantic'
+  embed_model: 'local|hf|local_bge_m3'
+  llm_model: 'ollama|csalab/sahabatai1:latest'
+  chunking: 'semantic'
+  domain: 'medical'
+  info_medis: True
+  datapath: 'data/data_RAG'
+  testfile: 'data/data_test/qa-dokter-eg.xlsx'
+  port: 5000
+  prefix: False
+  append_db: False
+  mode: 'query-eval'
+  ollama_bin: '/home/lyla001/ollama/.local/bin/ollama'
+  token_hf: 'hf_YOUR_TOKEN_HERE'
+  venv: 'newchatvenv'
+  partition: 'long'
+  node: 'a100'
+  taxonomy_concepts_path: 'data/taxonomy_concepts_v4.json'
+  synonym_index_path: 'data/synonym_index_v4.json'
+  top_k: 5
+  retrieval_candidates_k: 20
+  n_iterations: 10
+  use_rerank: true
+  use_query_expansion_for_retrieval: false
+  use_query_rewriting: true
+  max_query_variants: 3
+  frequency_boost_factor: 0.1
+  use_cross_substitution: false
+  chroma_model: 'D003D-TAX-QEXP-CLEAN-V4-bgem3-sahabatai-semantic'

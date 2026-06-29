@@ -1,0 +1,25 @@
+# Taxonomy files — not distributed; contact authors to obtain
+data/taxonomy_concepts_v4.json
+data/synonym_index_v4.json
+data/KDIGO2024_Taksonomi_Medis_v3.docx
+
+# RAGAS results
+ragas_results/
+ragas_input/
+
+# Credentials and configs with tokens
+config_d003d_*.yaml
+ragas_openrouter.py
+ragas_openrouter2.py
+
+# Cache files
+ce_scores_cache.json
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Logs
+logs/
+*.log
+nohup.out
